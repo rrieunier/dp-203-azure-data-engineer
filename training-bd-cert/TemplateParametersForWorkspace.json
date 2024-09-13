@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "training-bd-cert"
+		},
+		"romandp203_accountKey": {
+			"value": ""
+		},
+		"training-bd-cert-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:training-bd-cert.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"Products_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/MicrosoftLearning/dp-203-azure-data-engineer/master/Allfiles/labs/01/adventureworks/products.csv"
+		},
+		"romandp203_properties_typeProperties_url": {
+			"value": "https://romandp203.dfs.core.windows.net/"
+		},
+		"training-bd-cert-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://bdaadlssandbox00.dfs.core.windows.net"
+		}
+	}
+}
