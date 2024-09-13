@@ -1,0 +1,23 @@
+{
+	"name": "relationship-oboxsgnmsn",
+	"properties": {
+		"Name": "relationship-oboxsgnmsn",
+		"EntityType": "RELATIONSHIP",
+		"Namespace": {
+			"DatabaseName": "RetailDB"
+		},
+		"Origin": {
+			"Type": "SPARK"
+		},
+		"FromTableName": "Product",
+		"ToTableName": "SalesOrder",
+		"ColumnRelationshipInformations": [
+			{
+				"FromColumnName": "ProductId",
+				"ToColumnName": "ProductId"
+			}
+		],
+		"RelationshipType": 0
+	},
+	"type": "RELATIONSHIP"
+}
