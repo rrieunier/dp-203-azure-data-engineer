@@ -1,0 +1,21 @@
+{
+	"name": "romandp203",
+	"properties": {
+		"description": "Used to work on a warehouse linked to the non-default linked service\n",
+		"configs": {
+			"spark.storage.synapse.linkedServiceName": "romandp203",
+			"spark.sql.warehouse.dir": "abfss://files@romandp203.dfs.core.windows.net/synapse/workspaces/training-bd-cert/warehouse",
+			"fs.azure.account.oauth.provider.type": "com.microsoft.azure.synapse.tokenlibrary.LinkedServiceBasedTokenProvider"
+		},
+		"created": "2024-09-16T13:23:59.7780000+02:00",
+		"createdBy": "rrieunier@adflux.net",
+		"annotations": [
+			""
+		],
+		"configMergeRule": {
+			"artifact.currentOperation.spark.storage.synapse.linkedServiceName": "replace",
+			"artifact.currentOperation.spark.sql.warehouse.dir": "replace",
+			"artifact.currentOperation.fs.azure.account.oauth.provider.type": "replace"
+		}
+	}
+}
