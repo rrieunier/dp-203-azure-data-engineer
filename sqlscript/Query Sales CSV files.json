@@ -7,7 +7,7 @@
 				"language": "sql"
 			},
 			"currentConnection": {
-				"databaseName": "master",
+				"databaseName": "Sales",
 				"poolName": "Built-in"
 			},
 			"resultLimit": -1

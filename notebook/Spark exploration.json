@@ -7,6 +7,10 @@
 			"referenceName": "romandp203spark",
 			"type": "BigDataPoolReference"
 		},
+		"targetSparkConfiguration": {
+			"referenceName": "romandp203",
+			"type": "SparkConfigurationReference"
+		},
 		"sessionProperties": {
 			"driverMemory": "28g",
 			"driverCores": 4,
@@ -17,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "fcac2487-08e2-45bd-9e2d-f1d3d77e5351"
+				"spark.autotune.trackingId": "4a6932ba-141b-4968-ad6e-9744c71e0d3e"
 			}
 		},
 		"metadata": {
@@ -45,7 +49,8 @@
 				"memory": 28,
 				"automaticScaleJobs": false
 			},
-			"sessionKeepAliveTimeout": 30
+			"sessionKeepAliveTimeout": 30,
+			"targetSparkConfiguration": "romandp203"
 		},
 		"cells": [
 			{
@@ -85,7 +90,7 @@
 					")\r\n",
 					"display(df.limit(100))"
 				],
-				"execution_count": 51
+				"execution_count": 1
 			},
 			{
 				"cell_type": "code",
@@ -103,7 +108,7 @@
 				"source": [
 					"df.printSchema()"
 				],
-				"execution_count": 52
+				"execution_count": 2
 			},
 			{
 				"cell_type": "code",
@@ -122,7 +127,7 @@
 				"source": [
 					"display(df.toPandas())"
 				],
-				"execution_count": 53
+				"execution_count": 3
 			},
 			{
 				"cell_type": "code",
@@ -144,7 +149,7 @@
 					"print(customers.distinct().count())\r\n",
 					"display(customers.distinct())"
 				],
-				"execution_count": 54
+				"execution_count": 4
 			},
 			{
 				"cell_type": "code",
@@ -166,7 +171,7 @@
 					"print(customers.distinct().count())\r\n",
 					"display(customers.distinct())"
 				],
-				"execution_count": 55
+				"execution_count": 5
 			},
 			{
 				"cell_type": "code",
@@ -186,7 +191,7 @@
 					"productSales = df.select(\"Item\", \"Quantity\").groupBy(\"Item\").sum()\r\n",
 					"display(productSales)"
 				],
-				"execution_count": 56
+				"execution_count": 6
 			},
 			{
 				"cell_type": "code",
@@ -206,7 +211,7 @@
 					"yearlySales = df.select(year(\"OrderDate\").alias(\"Year\")).groupBy(\"Year\").count().orderBy(\"Year\")\r\n",
 					"display(yearlySales)"
 				],
-				"execution_count": 57
+				"execution_count": 7
 			},
 			{
 				"cell_type": "code",
@@ -227,7 +232,7 @@
 					"spark_df = spark.sql(\"SELECT * FROM salesorders\")\r\n",
 					"display(spark_df)"
 				],
-				"execution_count": 58
+				"execution_count": 8
 			},
 			{
 				"cell_type": "code",
@@ -254,7 +259,7 @@
 					"GROUP BY YEAR(OrderDate)\r\n",
 					"ORDER BY OrderYear;"
 				],
-				"execution_count": 59
+				"execution_count": 9
 			},
 			{
 				"cell_type": "code",
@@ -277,7 +282,7 @@
 					"%%sql\r\n",
 					"SELECT * FROM salesorders"
 				],
-				"execution_count": 60
+				"execution_count": 10
 			},
 			{
 				"cell_type": "code",
@@ -301,7 +306,7 @@
 					"df_spark = spark.sql(sqlQuery)\r\n",
 					"df_spark.show()"
 				],
-				"execution_count": 61
+				"execution_count": 11
 			},
 			{
 				"cell_type": "code",
@@ -337,7 +342,7 @@
 					"ax[0].set_xlabel(\"Year\")\r\n",
 					"ax[0].set_ylabel(\"Revenue\")"
 				],
-				"execution_count": 62
+				"execution_count": 12
 			},
 			{
 				"cell_type": "code",
@@ -359,7 +364,7 @@
 					"ax = sns.lineplot(x=\"OrderYear\", y=\"GrossRevenue\", data=df_sales)\r\n",
 					"plt.show()"
 				],
-				"execution_count": 63
+				"execution_count": 13
 			},
 			{
 				"cell_type": "code",
