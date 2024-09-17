@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "cbc0036f-f626-4844-83f8-dcf70a65010a"
+				"spark.autotune.trackingId": "90b47254-3780-4e51-8da5-6b0194074ec2"
 			}
 		},
 		"metadata": {
@@ -82,7 +82,7 @@
 				"source": [
 					"linked_service = \"abfss://files@romandp203.dfs.core.windows.net\""
 				],
-				"execution_count": 16
+				"execution_count": 1
 			},
 			{
 				"cell_type": "markdown",
@@ -110,7 +110,7 @@
 					"df = spark.read.load(f'{linked_service}/products/products.csv', format='csv', header=True)\r\n",
 					"display(df.limit(10))"
 				],
-				"execution_count": 17
+				"execution_count": 19
 			},
 			{
 				"cell_type": "code",
@@ -129,7 +129,7 @@
 					"delta_table_path = f\"{linked_service}/delta/products-delta\"\r\n",
 					"df.write.format(\"delta\").save(delta_table_path, mode=\"overwrite\")"
 				],
-				"execution_count": 18
+				"execution_count": 20
 			},
 			{
 				"cell_type": "code",
@@ -160,7 +160,7 @@
 					"# View the updated data as a dataframe\r\n",
 					"display(deltaTable.toDF().limit(10))"
 				],
-				"execution_count": 8
+				"execution_count": 21
 			},
 			{
 				"cell_type": "code",
@@ -180,7 +180,7 @@
 					"new_df = spark.read.load(delta_table_path, format=\"delta\")\r\n",
 					"display(new_df.limit(10))"
 				],
-				"execution_count": 9
+				"execution_count": 22
 			},
 			{
 				"cell_type": "code",
@@ -200,7 +200,7 @@
 					"new_df = spark.read.load(delta_table_path, format=\"delta\", versionAsOf=0)\r\n",
 					"display(new_df.limit(10))"
 				],
-				"execution_count": 10
+				"execution_count": 23
 			},
 			{
 				"cell_type": "code",
@@ -218,7 +218,7 @@
 				"source": [
 					"deltaTable.history(10).show(20, False, True)"
 				],
-				"execution_count": 11
+				"execution_count": 24
 			},
 			{
 				"cell_type": "markdown",
@@ -253,7 +253,7 @@
 					"spark.sql(f\"CREATE TABLE IF NOT EXISTS AdventureWorks.ProductsExternal USING DELTA LOCATION '{delta_table_path}'\")\r\n",
 					"spark.sql(\"DESCRIBE EXTENDED AdventureWorks.ProductsExternal\").show(truncate=False)"
 				],
-				"execution_count": 13
+				"execution_count": 25
 			},
 			{
 				"cell_type": "code",
@@ -278,7 +278,7 @@
 					"USE AdventureWorks;\r\n",
 					"SELECT * FROM ProductsExternal;"
 				],
-				"execution_count": 14
+				"execution_count": 26
 			},
 			{
 				"cell_type": "markdown",
@@ -310,7 +310,7 @@
 					"df.write.format(\"delta\").saveAsTable(\"AdventureWorks.ProductsManaged\")\r\n",
 					"spark.sql(\"DESCRIBE EXTENDED AdventureWorks.ProductsManaged\").show(truncate=False)"
 				],
-				"execution_count": 19
+				"execution_count": 27
 			},
 			{
 				"cell_type": "code",
@@ -335,7 +335,7 @@
 					"USE AdventureWorks;\r\n",
 					"SELECT * FROM ProductsManaged;"
 				],
-				"execution_count": 20
+				"execution_count": 28
 			},
 			{
 				"cell_type": "code",
@@ -362,7 +362,7 @@
 					"DROP TABLE IF EXISTS ProductsExternal;\r\n",
 					"DROP TABLE IF EXISTS ProductsManaged;"
 				],
-				"execution_count": 21
+				"execution_count": 29
 			},
 			{
 				"cell_type": "markdown",
@@ -402,7 +402,7 @@
 					"USING DELTA\r\n",
 					"LOCATION '/delta/products-delta';"
 				],
-				"execution_count": 25
+				"execution_count": 30
 			},
 			{
 				"cell_type": "code",
@@ -427,7 +427,7 @@
 					"USE AdventureWorks;\r\n",
 					"SELECT * FROM Products;"
 				],
-				"execution_count": 26
+				"execution_count": 31
 			},
 			{
 				"cell_type": "markdown",
@@ -461,13 +461,13 @@
 					"from pyspark.sql.functions import *\r\n",
 					"\r\n",
 					"# Create a folder\r\n",
-					"inputPath = f'{linked_service}/data/'\r\n",
+					"inputPath = f'{linked_service}/streaming/'\r\n",
 					"mssparkutils.fs.mkdirs(inputPath)\r\n",
 					"\r\n",
 					"# Create a stream that reads data from the folder, using a JSON schema\r\n",
 					"jsonSchema = StructType([\r\n",
-					"StructField(\"device\", StringType(), False),\r\n",
-					"StructField(\"status\", StringType(), False)\r\n",
+					"    StructField(\"device\", StringType(), False),\r\n",
+					"    StructField(\"status\", StringType(), False)\r\n",
 					"])\r\n",
 					"iotstream = spark.readStream.schema(jsonSchema).option(\"maxFilesPerTrigger\", 1).json(inputPath)\r\n",
 					"\r\n",
@@ -484,7 +484,7 @@
 					"mssparkutils.fs.put(inputPath + \"data.txt\", device_data, True)\r\n",
 					"print(\"Source stream created...\")"
 				],
-				"execution_count": 27
+				"execution_count": 8
 			},
 			{
 				"cell_type": "code",
@@ -506,7 +506,28 @@
 					"deltastream = iotstream.writeStream.format(\"delta\").option(\"checkpointLocation\", checkpointpath).start(delta_stream_table_path)\r\n",
 					"print(\"Streaming to delta sink...\")"
 				],
-				"execution_count": 28
+				"execution_count": 9
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"# Read the data in delta format into a dataframe\r\n",
+					"df = spark.read.format(\"delta\").load(delta_stream_table_path)\r\n",
+					"display(df)"
+				],
+				"execution_count": 11
 			},
 			{
 				"cell_type": "code",
@@ -522,9 +543,103 @@
 					}
 				},
 				"source": [
-					""
+					"# create a catalog table based on the streaming sink\r\n",
+					"spark.sql(f\"CREATE TABLE IotDeviceData USING DELTA LOCATION '{delta_stream_table_path}'\")"
 				],
-				"execution_count": null
+				"execution_count": 12
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"SELECT * FROM IotDeviceData;"
+				],
+				"execution_count": 13
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Add more data to the source stream\r\n",
+					"more_data = '''{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"error\"}\r\n",
+					"{\"device\":\"Dev2\",\"status\":\"error\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"ok\"}'''\r\n",
+					"\r\n",
+					"mssparkutils.fs.put(inputPath + \"more-data.txt\", more_data, True)"
+				],
+				"execution_count": 17
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"SELECT * FROM IotDeviceData;"
+				],
+				"execution_count": 18
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"deltastream.stop()"
+				],
+				"execution_count": 16
 			}
 		]
 	}

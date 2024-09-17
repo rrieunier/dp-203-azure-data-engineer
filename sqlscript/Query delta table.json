@@ -1,0 +1,17 @@
+{
+	"name": "Query delta table",
+	"properties": {
+		"content": {
+			"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://romandp203.dfs.core.windows.net/files/delta/products-delta/',\n        FORMAT = 'DELTA'\n    ) AS [result]\n\n\nUSE AdventureWorks;\n\nSELECT * FROM Products;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "adventureworks",
+				"poolName": "Built-in"
+			},
+			"resultLimit": -1
+		},
+		"type": "SqlQuery"
+	}
+}
