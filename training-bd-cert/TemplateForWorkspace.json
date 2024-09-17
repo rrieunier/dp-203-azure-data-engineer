@@ -221,7 +221,7 @@
 						"language": "sql"
 					},
 					"currentConnection": {
-						"databaseName": "master",
+						"databaseName": "Sales",
 						"poolName": "Built-in"
 					},
 					"resultLimit": -1
@@ -231,7 +231,496 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/Spark exploration')]",
+			"name": "[concat(parameters('workspaceName'), '/Spark Transform')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "romandp203spark",
+					"type": "BigDataPoolReference"
+				},
+				"targetSparkConfiguration": {
+					"referenceName": "romandp203",
+					"type": "SparkConfigurationReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "509c3d31-20e3-4332-ace4-cafbf7f296cf"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/e7fb6279-2ac9-42d6-9620-f4f2a25c1a12/resourceGroups/BD-SparkSandbox/providers/Microsoft.Synapse/workspaces/training-bd-cert/bigDataPools/romandp203spark",
+						"name": "romandp203spark",
+						"type": "Spark",
+						"endpoint": "https://training-bd-cert.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/romandp203spark",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28
+					},
+					"sessionKeepAliveTimeout": 30,
+					"targetSparkConfiguration": "romandp203"
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Transform data by using Spark\r\n",
+							"\r\n",
+							"Apache Spark provides a distributed data processing platform that you can use to perform complex data transformations at scale."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"linked_service = \"abfss://files@romandp203.dfs.core.windows.net\""
+						],
+						"outputs": [],
+						"execution_count": 1
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## To fix SQL execution on a non-default linked service\r\n",
+							"\r\n",
+							"```python\r\n",
+							"from pyspark.sql import SparkSession\r\n",
+							"\r\n",
+							"# Initialize Spark session\r\n",
+							"spark = SparkSession.builder.getOrCreate()\r\n",
+							"\r\n",
+							"# Set the linked service name\r\n",
+							"linked_service_name = 'files@romandp203'\r\n",
+							"\r\n",
+							"# Configure the Spark session to use the linked service\r\n",
+							"spark.conf.set(\"spark.storage.synapse.linkedServiceName\", linked_service_name)\r\n",
+							"spark.conf.set(\"spark.sql.warehouse.dir\", f\"abfss://{linked_service_name}.dfs.core.windows.net/synapse/workspaces/training-bd-cert/warehouse\")\r\n",
+							"spark.conf.set(\"fs.azure.account.oauth.provider.type\", \"com.microsoft.azure.synapse.tokenlibrary.LinkedServiceBasedTokenProvider\")\r\n",
+							"```"
+						]
+					},
+					{
+						"cell_type": "markdown",
+						"source": [
+							"## Load source data\n",
+							"\n",
+							"Let's start by loading some historical sales order data into a dataframe.\n",
+							"\n",
+							"Review the code in the cell below, which loads the sales order from all of the csv files within the **data** directory. Then click the **&#9655;** button to the left of the cell to run it.\n",
+							"\n",
+							"> **Note**: The first time you run a cell in a notebook, the Spark pool must be started; which can take several minutes."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Print the Spark session configuration\r\n",
+							"for item in spark.sparkContext.getConf().getAll():\r\n",
+							"    if \"bdaadls\" in item[1]:\r\n",
+							"        print(item)"
+						],
+						"outputs": [],
+						"execution_count": 8
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"collapsed": false
+						},
+						"source": [
+							"order_details = spark.read.csv(f'{linked_service}/data/*.csv', header=True, inferSchema=True)\n",
+							"display(order_details.limit(5))"
+						],
+						"outputs": [],
+						"execution_count": 2
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Transform the data structure\r\n",
+							"\r\n",
+							"The source data includes a **CustomerName** field, that contains the customer's first and last name. Let's modify the dataframe to separate this field into separate **FirstName** and **LastName** fields."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"from pyspark.sql.functions import split, col\r\n",
+							"\r\n",
+							"# Create the new FirstName and LastName fields\r\n",
+							"transformed_df = order_details.withColumn(\"FirstName\", split(col(\"CustomerName\"), \" \").getItem(0)).withColumn(\"LastName\", split(col(\"CustomerName\"), \" \").getItem(1))\r\n",
+							"\r\n",
+							"# Remove the CustomerName field\r\n",
+							"transformed_df = transformed_df.drop(\"CustomerName\")\r\n",
+							"\r\n",
+							"display(transformed_df.limit(5))"
+						],
+						"outputs": [],
+						"execution_count": 3
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"The code above creates a new dataframe with the **CustomerName** field removed and two new **FirstName** and **LastName** fields.\r\n",
+							"\r\n",
+							"You can use the full power of the Spark SQL library to transform the data by filtering rows, deriving, removing, renaming columns, and any applying other required data modifications.\r\n",
+							"\r\n",
+							"## Save the transformed data\r\n",
+							"\r\n",
+							"After making the required changes to the data, you can save the results in a supported file format.\r\n",
+							"\r\n",
+							"> **Note**: Commonly, *Parquet* format is preferred for data files that you will use for further analysis or ingestion into an analytical store. Parquet is a very efficient format that is supported by most large scale data analytics systems. In fact, sometimes your data transformation requirement may simply be to convert data from another format (such as CSV) to Parquet!\r\n",
+							"\r\n",
+							"Use the following code to save the transformed dataframe in Parquet format (Overwriting the data if it already exists)."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"transformed_df.write.parquet(f'{linked_service}/transformed_data/orders.parquet', mode=\"overwrite\")\r\n",
+							"print (\"Transformed data saved!\")"
+						],
+						"outputs": [],
+						"execution_count": 4
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"In the **files** tab (which should still be open above), navigate to the root **files** container and verify that a new folder named **transformed_data** has been created, containing a file named **orders.parquet**. Then return to this notebook."
+						]
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Partition data\n",
+							"\n",
+							"A common way to optimize performance when dealing with large volumes of data is to partition the data files based on one or more field values. This can significant improve performance and make it easier to filter data.\n",
+							"\n",
+							"Use the following cell to derive new **Year** and **Month** fields and then save the resulting data in Parquet format, partitioned by year and month."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"from pyspark.sql.functions import year, month, col\r\n",
+							"\r\n",
+							"dated_df = transformed_df.withColumn(\"Year\", year(col(\"OrderDate\"))).withColumn(\"Month\", month(col(\"OrderDate\")))\r\n",
+							"display(dated_df.limit(5))\r\n",
+							"dated_df.write.parquet(f\"{linked_service}/partitioned_data\", mode=\"overwrite\", partitionBy=(\"Year\",\"Month\"))\r\n",
+							"print (\"Transformed data saved!\")"
+						],
+						"outputs": [],
+						"execution_count": 5
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"In the **files** tab (which should still be open above), navigate to the root **files** container and verify that a new folder named **partitioned_data** has been created, containing a hierachy of folders in the format **Year=*NNNN*** / **Month=*N***, each containing a .parquet file for the orders placed in the corresponding year and month. Then return to this notebook.\r\n",
+							"\r\n",
+							"You can read this data into a dataframe from any folder in the hierarchy, using explicit values or wildcards for partitioning fields. For example, use the following code to get the sales orders placed in 2020 for all months."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"orders_2020 = spark.read.parquet(f'{linked_service}/partitioned_data/Year=2020/Month=*')\r\n",
+							"display(orders_2020.limit(5))"
+						],
+						"outputs": [],
+						"execution_count": 6
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"Note that the partitioning columns specified in the file path are omitted in the resulting dataframe.\r\n",
+							"\r\n",
+							"## Use SQL to transform data\r\n",
+							"\r\n",
+							"Spark is a very flexible platform, and the **SQL** library that provides the dataframe also enables you to work with data using SQL semantics. You can query and transform data in dataframes by using SQL queries, and persist the results as tables - which are metadata abstractions over files.\r\n",
+							"\r\n",
+							"First, use the following code to save the original sales orders data (loaded from CSV files) as a table. Technically, this is an *external* table because the **path** parameter is used to specify where the data files for the table are stored (an *internal* table is stored in the system storage for the Spark metastore and managed automatically)."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"outputs_hidden": false,
+								"source_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"order_details.write.saveAsTable('sales_orders', format='parquet', mode='overwrite', path=f'{linked_service}/sales_orders_table')"
+						],
+						"outputs": [],
+						"execution_count": 7
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"In the **files** tab (which should still be open above), navigate to the root **files** container and verify that a new folder named **sales_orders_table** has been created, containing parquet files for the table data. Then return to this notebook.\r\n",
+							"\r\n",
+							"Now that the table has been created, you can use SQL to transform it. For example, the following code derives new Year and Month columns and then saves the results as a partitioned external table."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"sql_transform = spark.sql(\"SELECT *, YEAR(OrderDate) AS Year, MONTH(OrderDate) AS Month FROM sales_orders\")\r\n",
+							"display(sql_transform.limit(5))\r\n",
+							"sql_transform.write.saveAsTable('transformed_orders', format='parquet', mode='overwrite', partitionBy=(\"Year\",\"Month\"), path=f'{linked_service}/transformed_orders_table')"
+						],
+						"outputs": [],
+						"execution_count": 9
+					},
+					{
+						"cell_type": "markdown",
+						"source": [
+							"In the **files** tab (which should still be open above), navigate to the root **files** container and verify that a new folder named **transformed_orders_table** has been created, containing a hierachy of folders in the format **Year=*NNNN*** / **Month=*N***, each containing a .parquet file for the orders placed in the corresponding year and month. Then return to this notebook.\n",
+							"\n",
+							"Essentially you've performed the same data transformation into partitioned parquet files as s before, but by using SQL instead of native dataframe methods.\n",
+							"\n",
+							"You can read this data into a dataframe from any folder in the hierarchy as before, but because the data files are also abstracted by a table in the metastore, you can query the data directly using SQL."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"SELECT * FROM transformed_orders\r\n",
+							"WHERE Year = 2021\r\n",
+							"    AND Month = 1"
+						],
+						"outputs": [],
+						"execution_count": 10
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"Because these are *external* tables, you can drop the tables from the metastore without deleting the files - so the transfomed data remains available for other downstream data analytics or ingestion processes."
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"DROP TABLE transformed_orders;\r\n",
+							"DROP TABLE sales_orders;"
+						],
+						"outputs": [],
+						"execution_count": 11
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/sparkConfigurations/romandp203')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Spark delta lake exploration')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -251,7 +740,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "a494535e-33fd-4953-b8e3-d6d2bede43fb"
+						"spark.autotune.trackingId": "608eca75-d7ce-4666-8230-fe3eb9b9db1d"
 					}
 				},
 				"metadata": {
@@ -280,6 +769,556 @@
 						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Use Delta Lake with Spark in Azure Synapse Analytics"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"linked_service = \"abfss://files@romandp203.dfs.core.windows.net\""
+						],
+						"outputs": [],
+						"execution_count": 16
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Create delta tables"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%pyspark\r\n",
+							"df = spark.read.load(f'{linked_service}/products/products.csv', format='csv', header=True)\r\n",
+							"display(df.limit(10))"
+						],
+						"outputs": [],
+						"execution_count": 17
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"delta_table_path = f\"{linked_service}/delta/products-delta\"\r\n",
+							"df.write.format(\"delta\").save(delta_table_path, mode=\"overwrite\")"
+						],
+						"outputs": [],
+						"execution_count": 18
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"from delta.tables import *\r\n",
+							"from pyspark.sql.functions import *\r\n",
+							"\r\n",
+							"# Create a deltaTable object\r\n",
+							"deltaTable = DeltaTable.forPath(spark, delta_table_path)\r\n",
+							"\r\n",
+							"# Update the table (reduce price of product 771 by 10%)\r\n",
+							"deltaTable.update(\r\n",
+							"    condition = \"ProductID == 771\",\r\n",
+							"    set = { \"ListPrice\": \"ListPrice * 0.9\" })\r\n",
+							"\r\n",
+							"# View the updated data as a dataframe\r\n",
+							"display(deltaTable.toDF().limit(10))"
+						],
+						"outputs": [],
+						"execution_count": 8
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"new_df = spark.read.load(delta_table_path, format=\"delta\")\r\n",
+							"display(new_df.limit(10))"
+						],
+						"outputs": [],
+						"execution_count": 9
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"collapsed": false
+						},
+						"source": [
+							"new_df = spark.read.load(delta_table_path, format=\"delta\", versionAsOf=0)\r\n",
+							"display(new_df.limit(10))"
+						],
+						"outputs": [],
+						"execution_count": 10
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"deltaTable.history(10).show(20, False, True)"
+						],
+						"outputs": [],
+						"execution_count": 11
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Create catalog tables\r\n",
+							"\r\n",
+							"### Create an external table"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"spark.sql(\"CREATE DATABASE IF NOT EXISTS AdventureWorks\")\r\n",
+							"spark.sql(f\"CREATE TABLE IF NOT EXISTS AdventureWorks.ProductsExternal USING DELTA LOCATION '{delta_table_path}'\")\r\n",
+							"spark.sql(\"DESCRIBE EXTENDED AdventureWorks.ProductsExternal\").show(truncate=False)"
+						],
+						"outputs": [],
+						"execution_count": 13
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"USE AdventureWorks;\r\n",
+							"SELECT * FROM ProductsExternal;"
+						],
+						"outputs": [],
+						"execution_count": 14
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Create a managed table"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"df.write.format(\"delta\").saveAsTable(\"AdventureWorks.ProductsManaged\")\r\n",
+							"spark.sql(\"DESCRIBE EXTENDED AdventureWorks.ProductsManaged\").show(truncate=False)"
+						],
+						"outputs": [],
+						"execution_count": 19
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"USE AdventureWorks;\r\n",
+							"SELECT * FROM ProductsManaged;"
+						],
+						"outputs": [],
+						"execution_count": 20
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"USE AdventureWorks;\r\n",
+							"SHOW TABLES;\r\n",
+							"DROP TABLE IF EXISTS ProductsExternal;\r\n",
+							"DROP TABLE IF EXISTS ProductsManaged;"
+						],
+						"outputs": [],
+						"execution_count": 21
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"### Create a table using SQL"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"USE AdventureWorks;\r\n",
+							"CREATE TABLE IF NOT EXISTS Products\r\n",
+							"USING DELTA\r\n",
+							"LOCATION '/delta/products-delta';"
+						],
+						"outputs": [],
+						"execution_count": 25
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							},
+							"microsoft": {
+								"language": "sparksql"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%sql\r\n",
+							"\r\n",
+							"USE AdventureWorks;\r\n",
+							"SELECT * FROM Products;"
+						],
+						"outputs": [],
+						"execution_count": 26
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"## Use delta tables for streaming data"
+						]
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"from notebookutils import mssparkutils\r\n",
+							"from pyspark.sql.types import *\r\n",
+							"from pyspark.sql.functions import *\r\n",
+							"\r\n",
+							"# Create a folder\r\n",
+							"inputPath = f'{linked_service}/data/'\r\n",
+							"mssparkutils.fs.mkdirs(inputPath)\r\n",
+							"\r\n",
+							"# Create a stream that reads data from the folder, using a JSON schema\r\n",
+							"jsonSchema = StructType([\r\n",
+							"StructField(\"device\", StringType(), False),\r\n",
+							"StructField(\"status\", StringType(), False)\r\n",
+							"])\r\n",
+							"iotstream = spark.readStream.schema(jsonSchema).option(\"maxFilesPerTrigger\", 1).json(inputPath)\r\n",
+							"\r\n",
+							"# Write some event data to the folder\r\n",
+							"device_data = '''{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+							"{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+							"{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+							"{\"device\":\"Dev2\",\"status\":\"error\"}\r\n",
+							"{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+							"{\"device\":\"Dev1\",\"status\":\"error\"}\r\n",
+							"{\"device\":\"Dev2\",\"status\":\"ok\"}\r\n",
+							"{\"device\":\"Dev2\",\"status\":\"error\"}\r\n",
+							"{\"device\":\"Dev1\",\"status\":\"ok\"}'''\r\n",
+							"mssparkutils.fs.put(inputPath + \"data.txt\", device_data, True)\r\n",
+							"print(\"Source stream created...\")"
+						],
+						"outputs": [],
+						"execution_count": 27
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"# Write the stream to a delta table\r\n",
+							"delta_stream_table_path = f'{linked_service}/delta/iotdevicedata'\r\n",
+							"checkpointpath = f'{linked_service}/delta/checkpoint'\r\n",
+							"deltastream = iotstream.writeStream.format(\"delta\").option(\"checkpointLocation\", checkpointpath).start(delta_stream_table_path)\r\n",
+							"print(\"Streaming to delta sink...\")"
+						],
+						"outputs": [],
+						"execution_count": 28
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							""
+						],
+						"outputs": [],
+						"execution_count": null
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Spark exploration')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "romandp203spark",
+					"type": "BigDataPoolReference"
+				},
+				"targetSparkConfiguration": {
+					"referenceName": "romandp203",
+					"type": "SparkConfigurationReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "4a6932ba-141b-4968-ad6e-9744c71e0d3e"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/e7fb6279-2ac9-42d6-9620-f4f2a25c1a12/resourceGroups/BD-SparkSandbox/providers/Microsoft.Synapse/workspaces/training-bd-cert/bigDataPools/romandp203spark",
+						"name": "romandp203spark",
+						"type": "Spark",
+						"endpoint": "https://training-bd-cert.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/romandp203spark",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28
+					},
+					"sessionKeepAliveTimeout": 30,
+					"targetSparkConfiguration": "romandp203"
 				},
 				"cells": [
 					{
@@ -320,7 +1359,7 @@
 							"display(df.limit(100))"
 						],
 						"outputs": [],
-						"execution_count": 51
+						"execution_count": 1
 					},
 					{
 						"cell_type": "code",
@@ -339,7 +1378,7 @@
 							"df.printSchema()"
 						],
 						"outputs": [],
-						"execution_count": 52
+						"execution_count": 2
 					},
 					{
 						"cell_type": "code",
@@ -359,7 +1398,7 @@
 							"display(df.toPandas())"
 						],
 						"outputs": [],
-						"execution_count": 53
+						"execution_count": 3
 					},
 					{
 						"cell_type": "code",
@@ -382,7 +1421,7 @@
 							"display(customers.distinct())"
 						],
 						"outputs": [],
-						"execution_count": 54
+						"execution_count": 4
 					},
 					{
 						"cell_type": "code",
@@ -405,7 +1444,7 @@
 							"display(customers.distinct())"
 						],
 						"outputs": [],
-						"execution_count": 55
+						"execution_count": 5
 					},
 					{
 						"cell_type": "code",
@@ -426,7 +1465,7 @@
 							"display(productSales)"
 						],
 						"outputs": [],
-						"execution_count": 56
+						"execution_count": 6
 					},
 					{
 						"cell_type": "code",
@@ -447,7 +1486,7 @@
 							"display(yearlySales)"
 						],
 						"outputs": [],
-						"execution_count": 57
+						"execution_count": 7
 					},
 					{
 						"cell_type": "code",
@@ -469,7 +1508,7 @@
 							"display(spark_df)"
 						],
 						"outputs": [],
-						"execution_count": 58
+						"execution_count": 8
 					},
 					{
 						"cell_type": "code",
@@ -497,7 +1536,7 @@
 							"ORDER BY OrderYear;"
 						],
 						"outputs": [],
-						"execution_count": 59
+						"execution_count": 9
 					},
 					{
 						"cell_type": "code",
@@ -521,7 +1560,7 @@
 							"SELECT * FROM salesorders"
 						],
 						"outputs": [],
-						"execution_count": 60
+						"execution_count": 10
 					},
 					{
 						"cell_type": "code",
@@ -546,7 +1585,7 @@
 							"df_spark.show()"
 						],
 						"outputs": [],
-						"execution_count": 61
+						"execution_count": 11
 					},
 					{
 						"cell_type": "code",
@@ -583,7 +1622,7 @@
 							"ax[0].set_ylabel(\"Revenue\")"
 						],
 						"outputs": [],
-						"execution_count": 62
+						"execution_count": 12
 					},
 					{
 						"cell_type": "code",
@@ -606,7 +1645,7 @@
 							"plt.show()"
 						],
 						"outputs": [],
-						"execution_count": 63
+						"execution_count": 13
 					},
 					{
 						"cell_type": "code",
@@ -628,6 +1667,32 @@
 						"execution_count": null
 					}
 				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/sparkConfigurations/romandp203')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/romandp203')]",
+			"type": "Microsoft.Synapse/workspaces/sparkConfigurations",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "Used to work on a warehouse linked to the non-default linked service\n",
+				"configs": {
+					"spark.storage.synapse.linkedServiceName": "romandp203",
+					"spark.sql.warehouse.dir": "abfss://files@romandp203.dfs.core.windows.net/synapse/workspaces/training-bd-cert/warehouse",
+					"fs.azure.account.oauth.provider.type": "com.microsoft.azure.synapse.tokenlibrary.LinkedServiceBasedTokenProvider"
+				},
+				"created": "2024-09-16T13:23:59.7780000+02:00",
+				"createdBy": "rrieunier@adflux.net",
+				"annotations": [
+					""
+				],
+				"configMergeRule": {
+					"artifact.currentOperation.spark.storage.synapse.linkedServiceName": "replace",
+					"artifact.currentOperation.spark.sql.warehouse.dir": "replace",
+					"artifact.currentOperation.fs.azure.account.oauth.provider.type": "replace"
+				}
 			},
 			"dependsOn": []
 		},
