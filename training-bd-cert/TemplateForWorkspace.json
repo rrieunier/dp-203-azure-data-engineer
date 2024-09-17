@@ -730,6 +730,10 @@
 					"referenceName": "romandp203spark",
 					"type": "BigDataPoolReference"
 				},
+				"targetSparkConfiguration": {
+					"referenceName": "romandp203",
+					"type": "SparkConfigurationReference"
+				},
 				"sessionProperties": {
 					"driverMemory": "28g",
 					"driverCores": 4,
@@ -740,7 +744,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "608eca75-d7ce-4666-8230-fe3eb9b9db1d"
+						"spark.autotune.trackingId": "c5152851-61de-4bdf-9639-a907522a957b"
 					}
 				},
 				"metadata": {
@@ -768,7 +772,8 @@
 						"memory": 28,
 						"automaticScaleJobs": false
 					},
-					"sessionKeepAliveTimeout": 30
+					"sessionKeepAliveTimeout": 30,
+					"targetSparkConfiguration": "romandp203"
 				},
 				"cells": [
 					{
@@ -1263,7 +1268,9 @@
 					}
 				]
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/sparkConfigurations/romandp203')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('workspaceName'), '/Spark exploration')]",
