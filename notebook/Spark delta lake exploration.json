@@ -7,10 +7,6 @@
 			"referenceName": "romandp203spark",
 			"type": "BigDataPoolReference"
 		},
-		"targetSparkConfiguration": {
-			"referenceName": "romandp203",
-			"type": "SparkConfigurationReference"
-		},
 		"sessionProperties": {
 			"driverMemory": "28g",
 			"driverCores": 4,
@@ -21,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "d9eae0b7-5fd2-4718-8f8f-e2ac34d833e4"
+				"spark.autotune.trackingId": "a9311853-6c08-4c38-b87e-1fb0cddc8414"
 			}
 		},
 		"metadata": {
@@ -49,8 +45,7 @@
 				"memory": 28,
 				"automaticScaleJobs": false
 			},
-			"sessionKeepAliveTimeout": 30,
-			"targetSparkConfiguration": "romandp203"
+			"sessionKeepAliveTimeout": 30
 		},
 		"cells": [
 			{
