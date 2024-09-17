@@ -5,6 +5,9 @@
 		"workspaceName": {
 			"value": "training-bd-cert"
 		},
+		"Data_Warehouse_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=training-bd-cert.sql.azuresynapse.net;Initial Catalog=romandp203"
+		},
 		"romandp203_accountKey": {
 			"value": ""
 		},
