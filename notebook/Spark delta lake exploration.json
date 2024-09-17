@@ -1,0 +1,531 @@
+{
+	"name": "Spark delta lake exploration",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "romandp203spark",
+			"type": "BigDataPoolReference"
+		},
+		"targetSparkConfiguration": {
+			"referenceName": "romandp203",
+			"type": "SparkConfigurationReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "b8ac56d2-27f8-4f61-ba22-e90f4d436328"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/e7fb6279-2ac9-42d6-9620-f4f2a25c1a12/resourceGroups/BD-SparkSandbox/providers/Microsoft.Synapse/workspaces/training-bd-cert/bigDataPools/romandp203spark",
+				"name": "romandp203spark",
+				"type": "Spark",
+				"endpoint": "https://training-bd-cert.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/romandp203spark",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30,
+			"targetSparkConfiguration": "romandp203"
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Use Delta Lake with Spark in Azure Synapse Analytics"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"linked_service = \"abfss://files@romandp203.dfs.core.windows.net\""
+				],
+				"execution_count": 16
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Create delta tables"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"df = spark.read.load(f'{linked_service}/products/products.csv', format='csv', header=True)\r\n",
+					"display(df.limit(10))"
+				],
+				"execution_count": 17
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"delta_table_path = f\"{linked_service}/delta/products-delta\"\r\n",
+					"df.write.format(\"delta\").save(delta_table_path, mode=\"overwrite\")"
+				],
+				"execution_count": 18
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"from delta.tables import *\r\n",
+					"from pyspark.sql.functions import *\r\n",
+					"\r\n",
+					"# Create a deltaTable object\r\n",
+					"deltaTable = DeltaTable.forPath(spark, delta_table_path)\r\n",
+					"\r\n",
+					"# Update the table (reduce price of product 771 by 10%)\r\n",
+					"deltaTable.update(\r\n",
+					"    condition = \"ProductID == 771\",\r\n",
+					"    set = { \"ListPrice\": \"ListPrice * 0.9\" })\r\n",
+					"\r\n",
+					"# View the updated data as a dataframe\r\n",
+					"display(deltaTable.toDF().limit(10))"
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"new_df = spark.read.load(delta_table_path, format=\"delta\")\r\n",
+					"display(new_df.limit(10))"
+				],
+				"execution_count": 9
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"new_df = spark.read.load(delta_table_path, format=\"delta\", versionAsOf=0)\r\n",
+					"display(new_df.limit(10))"
+				],
+				"execution_count": 10
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"deltaTable.history(10).show(20, False, True)"
+				],
+				"execution_count": 11
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Create catalog tables\r\n",
+					"\r\n",
+					"### Create an external table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"spark.sql(\"CREATE DATABASE IF NOT EXISTS AdventureWorks\")\r\n",
+					"spark.sql(f\"CREATE TABLE IF NOT EXISTS AdventureWorks.ProductsExternal USING DELTA LOCATION '{delta_table_path}'\")\r\n",
+					"spark.sql(\"DESCRIBE EXTENDED AdventureWorks.ProductsExternal\").show(truncate=False)"
+				],
+				"execution_count": 13
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE AdventureWorks;\r\n",
+					"SELECT * FROM ProductsExternal;"
+				],
+				"execution_count": 14
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Create a managed table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"df.write.format(\"delta\").saveAsTable(\"AdventureWorks.ProductsManaged\")\r\n",
+					"spark.sql(\"DESCRIBE EXTENDED AdventureWorks.ProductsManaged\").show(truncate=False)"
+				],
+				"execution_count": 19
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE AdventureWorks;\r\n",
+					"SELECT * FROM ProductsManaged;"
+				],
+				"execution_count": 20
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE AdventureWorks;\r\n",
+					"SHOW TABLES;\r\n",
+					"DROP TABLE IF EXISTS ProductsExternal;\r\n",
+					"DROP TABLE IF EXISTS ProductsManaged;"
+				],
+				"execution_count": 21
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Create a table using SQL"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE AdventureWorks;\r\n",
+					"CREATE TABLE IF NOT EXISTS Products\r\n",
+					"USING DELTA\r\n",
+					"LOCATION '/delta/products-delta';"
+				],
+				"execution_count": 25
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE AdventureWorks;\r\n",
+					"SELECT * FROM Products;"
+				],
+				"execution_count": 26
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## Use delta tables for streaming data"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from notebookutils import mssparkutils\r\n",
+					"from pyspark.sql.types import *\r\n",
+					"from pyspark.sql.functions import *\r\n",
+					"\r\n",
+					"# Create a folder\r\n",
+					"inputPath = f'{linked_service}/data/'\r\n",
+					"mssparkutils.fs.mkdirs(inputPath)\r\n",
+					"\r\n",
+					"# Create a stream that reads data from the folder, using a JSON schema\r\n",
+					"jsonSchema = StructType([\r\n",
+					"StructField(\"device\", StringType(), False),\r\n",
+					"StructField(\"status\", StringType(), False)\r\n",
+					"])\r\n",
+					"iotstream = spark.readStream.schema(jsonSchema).option(\"maxFilesPerTrigger\", 1).json(inputPath)\r\n",
+					"\r\n",
+					"# Write some event data to the folder\r\n",
+					"device_data = '''{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+					"{\"device\":\"Dev2\",\"status\":\"error\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"ok\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"error\"}\r\n",
+					"{\"device\":\"Dev2\",\"status\":\"ok\"}\r\n",
+					"{\"device\":\"Dev2\",\"status\":\"error\"}\r\n",
+					"{\"device\":\"Dev1\",\"status\":\"ok\"}'''\r\n",
+					"mssparkutils.fs.put(inputPath + \"data.txt\", device_data, True)\r\n",
+					"print(\"Source stream created...\")"
+				],
+				"execution_count": 27
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Write the stream to a delta table\r\n",
+					"delta_stream_table_path = f'{linked_service}/delta/iotdevicedata'\r\n",
+					"checkpointpath = f'{linked_service}/delta/checkpoint'\r\n",
+					"deltastream = iotstream.writeStream.format(\"delta\").option(\"checkpointLocation\", checkpointpath).start(delta_stream_table_path)\r\n",
+					"print(\"Streaming to delta sink...\")"
+				],
+				"execution_count": 28
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				],
+				"execution_count": null
+			}
+		]
+	}
+}
