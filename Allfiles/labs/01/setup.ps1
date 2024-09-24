@@ -1,5 +1,5 @@
 Clear-Host
-Write-Host "Starting script at $(Get-Date)"
+Write-Host "Starting script at $( Get-Date )"
 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 Install-Module -Name Az.Synapse -Force
 
@@ -8,23 +8,25 @@ $config = Get-Content -Path "../config.json" | ConvertFrom-Json
 
 # Set subscription
 $selectedSub = $config.subscriptionId
-if (-not $selectedSub) {
+if (-not $selectedSub)
+{
     # Handle cases where the user has multiple subscriptions
     $subs = Get-AzSubscription | Select-Object
-    if($subs.GetType().IsArray -and $subs.length -gt 1){
+    if ($subs.GetType().IsArray -and $subs.length -gt 1)
+    {
         Write-Host "You have multiple Azure subscriptions - please select the one you want to use:"
         for($i = 0; $i -lt $subs.length; $i++)
         {
-            Write-Host "[$($i)]: $($subs[$i].Name) (ID = $($subs[$i].Id))"
+            Write-Host "[$( $i )]: $( $subs[$i].Name ) (ID = $( $subs[$i].Id ))"
         }
         $selectedIndex = -1
         $selectedValidIndex = 0
         while ($selectedValidIndex -ne 1)
         {
-            $enteredValue = Read-Host("Enter 0 to $($subs.Length - 1)")
+            $enteredValue = Read-Host("Enter 0 to $( $subs.Length - 1 )")
             if (-not ([string]::IsNullOrEmpty($enteredValue)))
             {
-                if ([int]$enteredValue -in (0..$($subs.Length - 1)))
+                if ([int]$enteredValue -in (0..$( $subs.Length - 1 )))
                 {
                     $selectedIndex = [int]$enteredValue
                     $selectedValidIndex = 1
@@ -47,11 +49,13 @@ az account set --subscription $selectedSub
 
 # Prompt user for a password for the SQL Database
 $sqlUser = $config.sqlUser
-if (-not $sqlUser) {
+if (-not $sqlUser)
+{
     $sqlUser = "SQLUser"
 }
 $sqlPassword = $config.sqlPassword
-if (-not $sqlPassword) {
+if (-not $sqlPassword)
+{
     write-host ""
     $sqlPassword = ""
     $complexPassword = 0
@@ -66,7 +70,7 @@ if (-not $sqlPassword) {
         ` - At least one special character (!,@,#,%,^,&,$)
         ` "
 
-        if(($SqlPassword -cmatch '[a-z]') -and ($SqlPassword -cmatch '[A-Z]') -and ($SqlPassword -match '\d') -and ($SqlPassword.length -ge 8) -and ($SqlPassword -match '!|@|#|%|\^|&|\$'))
+        if (($SqlPassword -cmatch '[a-z]') -and ($SqlPassword -cmatch '[A-Z]') -and ($SqlPassword -match '\d') -and ($SqlPassword.length -ge 8) -and ($SqlPassword -match '!|@|#|%|\^|&|\$'))
         {
             $complexPassword = 1
             Write-Output "Password $SqlPassword accepted. Make sure you remember this!"
@@ -78,38 +82,26 @@ if (-not $sqlPassword) {
     }
 }
 
-# Register resource providers
-Write-Host "Registering resource providers..."
-$provider_list = "Microsoft.Synapse", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Compute"
-foreach ($provider in $provider_list){
-    $result = Register-AzResourceProvider -ProviderNamespace $provider
-    $status = $result.RegistrationState
-    Write-Host "$provider : $status"
-}
-
 # Generate unique random suffix
-[string]$suffix =  -join ((48..57) + (97..122) | Get-Random -Count 7 | % {[char]$_})
+[string]$suffix = -join ((48..57) + (97..122) | Get-Random -Count 7 | % { [char]$_ })
 Write-Host "Your randomly-generated suffix for Azure resources is $suffix"
 
 # Use values from the JSON configuration or generate defaults
 $resourceGroupName = $config.resourceGroupName
-if (-not $resourceGroupName) {
+if (-not $resourceGroupName)
+{
     $resourceGroupName = "dp203-$suffix"
 }
 
 $Region = $config.region
-if (-not $Region) {
+if (-not $Region)
+{
     # Choose a random region
-    Write-Host "Finding an available region. This may take several minutes...";
-    $delay = 0, 30, 60, 90, 120 | Get-Random
+    Write-Host "Finding an available region. This may take several minutes..."; $delay = 0, 30, 60, 90, 120 | Get-Random
     Start-Sleep -Seconds $delay # random delay to stagger requests from multi-student classes
-    $preferred_list = "australiaeast","centralus","southcentralus","eastus2","northeurope","southeastasia","uksouth","westeurope","westus","westus2"
+    $preferred_list = "australiaeast", "centralus", "southcentralus", "eastus2", "northeurope", "southeastasia", "uksouth", "westeurope", "westus", "westus2"
     $locations = Get-AzLocation | Where-Object {
-        $_.Providers -contains "Microsoft.Synapse" -and
-        $_.Providers -contains "Microsoft.Sql" -and
-        $_.Providers -contains "Microsoft.Storage" -and
-        $_.Providers -contains "Microsoft.Compute" -and
-        $_.Location -in $preferred_list
+        $_.Providers -contains "Microsoft.Synapse" -and $_.Providers -contains "Microsoft.Sql" -and $_.Providers -contains "Microsoft.Storage" -and $_.Providers -contains "Microsoft.Compute" -and $_.Location -in $preferred_list
     }
     $max_index = $locations.Count - 1
     $rand = (0..$max_index) | Get-Random
@@ -117,13 +109,14 @@ if (-not $Region) {
 
     # Test for subscription Azure SQL capacity constraints in randomly selected regions
     # (for some subsription types, quotas are adjusted dynamically based on capacity)
-     $success = 0
-     $tried_list = New-Object Collections.Generic.List[string]
+    $success = 0
+    $tried_list = New-Object Collections.Generic.List[string]
 
-     while ($success -ne 1){
+    while ($success -ne 1)
+    {
         write-host "Trying $Region"
         $capability = Get-AzSqlCapability -LocationName $Region
-        if($capability.Status -eq "Available")
+        if ($capability.Status -eq "Available")
         {
             $success = 1
             write-host "Using $Region"
@@ -132,13 +125,14 @@ if (-not $Region) {
         {
             $success = 0
             $tried_list.Add($Region)
-            $locations = $locations | Where-Object {$_.Location -notin $tried_list}
+            $locations = $locations | Where-Object { $_.Location -notin $tried_list }
             if ($locations.Count -ne 1)
             {
-                $rand = (0..$($locations.Count - 1)) | Get-Random
+                $rand = (0..$( $locations.Count - 1 )) | Get-Random
                 $Region = $locations.Get($rand).Location
             }
-            else {
+            else
+            {
                 Write-Host "Couldn't find an available region for deployment."
                 Write-Host "Sorry! Try again later."
                 Exit
@@ -149,36 +143,53 @@ if (-not $Region) {
 
 Write-Host "Creating $resourceGroupName resource group in $Region ..."
 $resourceGroup = Get-AzResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
-if (-not $resourceGroup) {
+if (-not $resourceGroup)
+{
     New-AzResourceGroup -Name $resourceGroupName -Location $Region | Out-Null
-} else {
+    # Register resource providers
+    Write-Host "Registering resource providers..."
+    $provider_list = "Microsoft.Synapse", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Compute"
+    foreach ($provider in $provider_list)
+    {
+        $result = Register-AzResourceProvider -ProviderNamespace $provider
+        $status = $result.RegistrationState
+        Write-Host "$provider : $status"
+    }
+}
+else
+{
     Write-Host "Resource group $resourceGroupName already exists."
 }
 
 $synapseWorkspace = $config.synapseWorkspace
-if (-not $synapseWorkspace) {
+if (-not $synapseWorkspace)
+{
     $synapseWorkspace = "synapse$suffix"
 }
 
 $dataLakeAccountName = $config.dataLakeAccountName
-if (-not $dataLakeAccountName) {
+if (-not $dataLakeAccountName)
+{
     $dataLakeAccountName = "datalake$suffix"
 }
 
 $sparkPool = $config.sparkPool
-if (-not $sparkPool) {
+if (-not $sparkPool)
+{
     $sparkPool = "spark$suffix"
 }
 
 $sqlDatabaseName = $config.sqlDatabaseName
-if (-not $sqlDatabaseName) {
+if (-not $sqlDatabaseName)
+{
     $sqlDatabaseName = "sql$suffix"
 }
 
 
 Write-Host "Creating $synapseWorkspace Synapse Analytics workspace in $resourceGroupName resource group..."
 $synapse = Get-AzSynapseWorkspace -Name $synapseWorkspace -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
-if (-not $synapse) {
+if (-not $synapse)
+{
     Write-Host "(This may take some time!)"
     New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
       -TemplateFile "setup.json" `
@@ -204,16 +215,21 @@ if (-not $synapse) {
     $id = (Get-AzADServicePrincipal -DisplayName $synapseWorkspace).id
     New-AzRoleAssignment -Objectid $id -RoleDefinitionName "Storage Blob Data Owner" -Scope "/subscriptions/$subscriptionId/resourceGroups/$resourceGroupName/providers/Microsoft.Storage/storageAccounts/$dataLakeAccountName" -ErrorAction SilentlyContinue
     New-AzRoleAssignment -SignInName $userName -RoleDefinitionName "Storage Blob Data Owner" -Scope "/subscriptions/$subscriptionId/resourceGroups/$resourceGroupName/providers/Microsoft.Storage/storageAccounts/$dataLakeAccountName" -ErrorAction SilentlyContinue
-} else {
+}
+else
+{
     Write-Host "Synapse workspace $synapseWorkspace already exists."
 }
 
 # Create database if it doesn't exist
 $sqlDatabase = Get-AzSqlDatabase -ServerName "$synapseWorkspace.sql.azuresynapse.net" -DatabaseName $sqlDatabaseName -ErrorAction SilentlyContinue
-if (-not $sqlDatabase) {
+if (-not $sqlDatabase)
+{
     Write-Host "Creating the $sqlDatabaseName database..."
     sqlcmd -S "$synapseWorkspace.sql.azuresynapse.net" -U $sqlUser -P $sqlPassword -d $sqlDatabaseName -I -i setup.sql
-} else {
+}
+else
+{
     Write-Host "SQL database $sqlDatabaseName already exists."
 }
 
@@ -223,7 +239,7 @@ Get-ChildItem "./data/*.txt" -File | ForEach-Object {
     Write-Host ""
     $file = $_.FullName
     Write-Host "$file"
-    $table = $_.Name.Replace(".txt","")
+    $table = $_.Name.Replace(".txt", "")
     bcp dbo.$table in $file -S "$synapseWorkspace.sql.azuresynapse.net" -U $sqlUser -P $sqlPassword -d $sqlDatabaseName -f $file.Replace("txt", "fmt") -q -k -E -b 5000
 }
 
@@ -247,4 +263,4 @@ Get-ChildItem "./files/*.csv" -File | ForEach-Object {
 # Removing until fix for Bad Request error is resolved
 # New-AzSynapseKqlScript -WorkspaceName $synapseWorkspace -DefinitionFile "./files/ingest-data.kql"
 
-write-host "Script completed at $(Get-Date)"
+write-host "Script completed at $( Get-Date )"
