@@ -1,0 +1,17 @@
+{
+	"name": "Analyze Reseller Sales",
+	"properties": {
+		"content": {
+			"query": "SELECT d.FiscalYear AS FY,\n    d.FiscalQuarter AS FQ,\n    SUM([OrderQuantity]) AS ItemsSold\nFROM [dbo].[FactResellerSales]\nJOIN DimDate AS d ON [OrderDateKey] = d.DateKey\nGROUP BY d.FiscalYear, d.FiscalQuarter\nORDER BY FY, FQ;\n\n\nSELECT d.FiscalYear AS FY,\n    d.FiscalQuarter AS FQ,\n    t.SalesTerritoryRegion AS Region,\n    SUM([OrderQuantity]) AS ItemsSold\nFROM FactResellerSales AS f\nJOIN DimDate AS d ON f.OrderDateKey = d.DateKey\nJOIN DimEmployee AS e ON f.EmployeeKey = e.EmployeeKey\nJOIN DimSalesTerritory AS t ON e.SalesTerritoryKey = t.SalesTerritoryKey\nGROUP BY d.FiscalYear, d.FiscalQuarter, t.SalesTerritoryRegion\nORDER BY FY, FQ;\n\n\nSELECT d.FiscalYear AS FY,\n    d.FiscalQuarter AS FQ,\n    t.SalesTerritoryRegion AS Region,\n    c.EnglishProductCategoryName AS Category,\n    SUM([OrderQuantity]) AS ItemsSold\nFROM FactResellerSales AS f\nJOIN DimDate AS d ON f.OrderDateKey = d.DateKey\nJOIN DimEmployee AS e ON f.EmployeeKey = e.EmployeeKey\nJOIN DimSalesTerritory AS t ON e.SalesTerritoryKey = t.SalesTerritoryKey\nJOIN DimProduct AS p ON f.ProductKey = p.ProductKey\nJOIN DimProductSubcategory AS s ON p.ProductSubcategoryKey = s.ProductSubcategoryKey\nJOIN DimProductCategory AS c ON s.ProductCategoryKey = c.ProductCategoryKey\nGROUP BY d.FiscalYear, d.FiscalQuarter, t.SalesTerritoryRegion, c.EnglishProductCategoryName\nORDER BY FY, FQ, Region, Category\n\n\nSELECT d.FiscalYear AS FY,\n    t.SalesTerritoryRegion AS Region,\n    SUM(SUM(SalesAmount)) OVER(PARTITION BY d.FiscalYear) AS YearlyAmount,\n    RANK() OVER(PARTITION BY d.FiscalYear ORDER BY SUM(SalesAmount) DESC) AS RegionRank,\n    SUM(SalesAmount) AS RegionAmount\nFROM FactResellerSales AS f\nJOIN DimDate AS d ON f.OrderDateKey = d.DateKey\nJOIN DimEmployee AS e ON f.EmployeeKey = e.EmployeeKey\nJOIN DimSalesTerritory AS t ON e.SalesTerritoryKey = t.SalesTerritoryKey\nJOIN DimProduct AS p ON f.ProductKey = p.ProductKey\nJOIN DimProductSubcategory AS s ON p.ProductSubcategoryKey = s.ProductSubcategoryKey\nJOIN DimProductCategory AS c ON s.ProductCategoryKey = c.ProductCategoryKey\nGROUP BY d.FiscalYear, t.SalesTerritoryRegion\nORDER BY FY\n\n\nSELECT d.FiscalYear AS FY,\n    t.SalesTerritoryRegion AS Region,\n    RANK() OVER(PARTITION BY d.FiscalYear ORDER BY SUM(SalesAmount) DESC) AS RegionRank,\n    APPROX_COUNT_DISTINCT(OrderQuantity) AS ApproxOrders\nFROM FactResellerSales AS f\nJOIN DimDate AS d ON f.OrderDateKey = d.DateKey\nJOIN DimEmployee AS e ON f.EmployeeKey = e.EmployeeKey\nJOIN DimSalesTerritory AS t ON e.SalesTerritoryKey = t.SalesTerritoryKey\nJOIN DimProduct AS p ON f.ProductKey = p.ProductKey\nJOIN DimProductSubcategory AS s ON p.ProductSubcategoryKey = s.ProductSubcategoryKey\nJOIN DimProductCategory AS c ON s.ProductCategoryKey = c.ProductCategoryKey\nGROUP BY d.FiscalYear, t.SalesTerritoryRegion\nORDER BY FY",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "romandp203sql",
+				"poolName": "romandp203sql"
+			},
+			"resultLimit": -1
+		},
+		"type": "SqlQuery"
+	}
+}
