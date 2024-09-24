@@ -1,0 +1,17 @@
+{
+	"name": "Analyze Internet Sales",
+	"properties": {
+		"content": {
+			"query": "SELECT  d.CalendarYear AS Year,\n        d.MonthNumberOfYear AS Month,\n        SUM(i.SalesAmount) AS InternetSalesAmount\nFROM FactInternetSales AS i\nJOIN DimDate AS d ON i.OrderDateKey = d.DateKey\nGROUP BY d.CalendarYear, d.MonthNumberOfYear\nORDER BY Year, Month;\n\nSELECT  d.CalendarYear AS Year,\n        pc.EnglishProductCategoryName as Category,\n        g.EnglishCountryRegionName AS Region,\n        SUM(i.SalesAmount) AS InternetSalesAmount\nFROM FactInternetSales AS i\nJOIN DimDate AS d ON i.OrderDateKey = d.DateKey\nJOIN DimCustomer AS c ON i.CustomerKey = c.CustomerKey\nJOIN DimGeography AS g ON c.GeographyKey = g.GeographyKey\nJOIN DimProduct AS p ON i.ProductKey = p.ProductKey\nJOIN DimProductSubcategory AS psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey\nJOIN DimProductCategory AS pc ON psc.ProductCategoryKey = pc.ProductCategoryKey\nGROUP BY d.CalendarYear, pc.EnglishProductCategoryName, g.EnglishCountryRegionName\nORDER BY Year, Region;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "romandp203sql",
+				"poolName": "romandp203sql"
+			},
+			"resultLimit": -1
+		},
+		"type": "SqlQuery"
+	}
+}
