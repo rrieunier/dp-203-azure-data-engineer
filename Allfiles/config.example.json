@@ -1,0 +1,11 @@
+{
+    "subscriptionId": "your-subscription-id",
+    "resourceGroupName": "your-resource-group-name",
+    "region": "your-region",
+    "synapseWorkspace": "your-synapse-workspace",
+    "dataLakeAccountName": "your-datalake-account-name",
+    "sparkPool": "your-spark-pool",
+    "sqlDatabaseName": "your-sql-database-name",
+    "sqlUser": "your-sql-user",
+    "sqlPassword": "your-sql-password"
+}
