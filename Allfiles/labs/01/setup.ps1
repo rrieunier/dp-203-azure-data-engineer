@@ -222,7 +222,7 @@ else
 }
 
 # Create database if it doesn't exist
-$sqlDatabase = Get-AzSqlDatabase -ServerName "$synapseWorkspace.sql.azuresynapse.net" -DatabaseName $sqlDatabaseName -ErrorAction SilentlyContinue
+$sqlDatabase = Get-AzSqlDatabase -ServerName "$synapseWorkspace.sql.azuresynapse.net" -DatabaseName $sqlDatabaseName -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
 if (-not $sqlDatabase)
 {
     Write-Host "Creating the $sqlDatabaseName database..."
