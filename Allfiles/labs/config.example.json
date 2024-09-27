@@ -7,5 +7,6 @@
     "sparkPool": "your-spark-pool",
     "sqlDatabaseName": "your-sql-database-name",
     "sqlUser": "your-sql-user",
-    "sqlPassword": "your-sql-password"
+    "sqlPassword": "your-sql-password",
+    "cosmosDB": "your-cosmosDB-account-name"
 }
