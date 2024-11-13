@@ -1,6 +1,9 @@
 {
 	"name": "Spark Transform Pipeline",
 	"properties": {
+		"folder": {
+			"name": "Roman"
+		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
