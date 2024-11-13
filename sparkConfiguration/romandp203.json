@@ -7,7 +7,7 @@
 			"spark.sql.warehouse.dir": "abfss://files@romandp203.dfs.core.windows.net/synapse/workspaces/training-bd-cert/warehouse",
 			"fs.azure.account.oauth.provider.type": "com.microsoft.azure.synapse.tokenlibrary.LinkedServiceBasedTokenProvider"
 		},
-		"created": "2024-09-16T13:23:59.7780000+02:00",
+		"created": "2024-09-16T11:23:59.778Z",
 		"createdBy": "rrieunier@adflux.net",
 		"annotations": [
 			""

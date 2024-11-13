@@ -17,7 +17,10 @@
 				"FormatType": "csv",
 				"LinkedServiceName": "romandp203"
 			}
-		}
+		},
+		"PublishStatus": "PUBLISHED",
+		"ObjectVersion": 4,
+		"ObjectId": "1226fc07-44d4-44aa-bfd6-618d5fdf7f48"
 	},
 	"type": "DATABASE"
 }

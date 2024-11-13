@@ -1,9 +1,6 @@
 {
 	"name": "Query Sales CSV files",
 	"properties": {
-		"folder": {
-			"name": "Roman"
-		},
 		"content": {
 			"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://romandp203.dfs.core.windows.net/files/sales/csv/**',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0',\n        HEADER_ROW=TRUE\n    ) AS [result]\n",
 			"metadata": {

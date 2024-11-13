@@ -17,7 +17,10 @@
 				"ToColumnName": "ProductId"
 			}
 		],
-		"RelationshipType": 0
+		"RelationshipType": 0,
+		"PublishStatus": "PUBLISHED",
+		"ObjectVersion": 1,
+		"ObjectId": "34f341a9-09b5-43e7-a36a-b5675b1bbfee"
 	},
 	"type": "RELATIONSHIP"
 }

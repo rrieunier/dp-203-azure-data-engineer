@@ -1,5 +1,6 @@
 {
 	"name": "Data_Warehouse",
+	"type": "Microsoft.Synapse/workspaces/linkedservices",
 	"properties": {
 		"description": "Dedicated SQL pool",
 		"annotations": [],

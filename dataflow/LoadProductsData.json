@@ -1,9 +1,6 @@
 {
 	"name": "LoadProductsData",
 	"properties": {
-		"folder": {
-			"name": "Roman"
-		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
