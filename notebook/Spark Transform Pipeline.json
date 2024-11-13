@@ -1,6 +1,9 @@
 {
 	"name": "Spark Transform Pipeline",
 	"properties": {
+		"folder": {
+			"name": "Roman"
+		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
@@ -46,8 +49,7 @@
 				"sparkVersion": "3.4",
 				"nodeCount": 10,
 				"cores": 4,
-				"memory": 28,
-				"automaticScaleJobs": false
+				"memory": 28
 			},
 			"sessionKeepAliveTimeout": 30,
 			"targetSparkConfiguration": "romandp203"

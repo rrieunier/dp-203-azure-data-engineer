@@ -1,6 +1,9 @@
 {
 	"name": "Query Azure Cosmos DB from a Spark pool",
 	"properties": {
+		"folder": {
+			"name": "Roman"
+		},
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
@@ -21,7 +24,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "da4e9ddc-6049-4151-9869-1d14e185f9bc"
+				"spark.autotune.trackingId": "d4d46a02-758e-4ea3-b42b-aaa4cbcd6da3"
 			}
 		},
 		"metadata": {
